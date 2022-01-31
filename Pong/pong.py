@@ -1,4 +1,5 @@
 import pygame
+import threading
 import neat
 paddel_width = 15
 paddel_height = 125
@@ -7,8 +8,9 @@ win = pygame.display.set_mode((400, 400))
 starting_left_position = (0 + 10, win.get_height() / 2 - paddel_height / 2)
 starting_right_position = (win.get_width() - 10 - paddel_width, win.get_height() / 2 - paddel_height / 2)
 ball_radius = 8
+fps = 100
 ball_bounce_variation = 2
-pop_size = 2
+pop_size = 4
 if not pop_size % 2 == 0:
 	pop_size += 1
 
@@ -69,23 +71,33 @@ class Paddel:
 class Game:
 	def __init__(self):
 		self.win = pygame.display.set_mode((400, 400))
+		self.clock = pygame.time.Clock()
 		self.ball = Ball()
 		self.paddel1 = Paddel(starting_left_position[0], starting_left_position[1])
 		self.paddel2 = Paddel(starting_right_position[0], starting_right_position[1])
 		self.paddels = [self.paddel1, self.paddel2]
 
 	def game_loop(self):
+		self.win.fill(51)
+		self.clock.tick(fps)
 		for paddel in self.paddels:
-			ball.collide(paddel)
+			self.ball.collide(paddel)
 			paddel.show()
 
 		self.ball.move()
 		self.ball.show()
 
 
-game = Game()
-while True:
-	game.game_loop
+
+games = [Game() for _ in range(int(pop_size / 2))]
+run = True
+while run:
+	for game in games:
+		game.game_loop()
+	pygame.display.update()
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			run = False
 
 
 def run(conifig_file):
