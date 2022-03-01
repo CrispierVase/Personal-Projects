@@ -1,0 +1,7 @@
+ have a list of all options
+ each node has a distance from the start 
+ this is parent nodes distance + 1
+ pick a node by distance. this is noted as cost on wikipedia 
+ Need a new sorting algorithm to return list sorted low distance to high distance 
+ expand neighbors to index 0 of new list, add neighbors to list of all options 
+ iterate until fake end neighbor found 

@@ -21,7 +21,7 @@ class Ball:
 	def __init__(self, win):
 		self.x = width / 2 - ball_radius
 		self.y = height /2 - ball_radius
-		self.x_dir = -5
+		self.x_dir = -2
 		self.y_dir = 0
 		self.win = win
 
@@ -50,7 +50,7 @@ class Ball:
 
 		else:
 			if self.x > paddel.x and self.y < paddel.y and self.y > paddel.y - paddel_height:
-				paddel.score += 1f
+				paddel.score += 1
 				self.x_dir = -self.x_dir + random.randrange(-ball_bounce_variation, ball_bounce_variation)
 				self.y_dir = -self.y_dir + random.randrange(-ball_bounce_variation, ball_bounce_variation)
 				if self.x_dir < 0:

@@ -1,16 +1,27 @@
 import pygame
 import random
 import time 
+import sys
+
+args = sys.argv[1:]
 
 start = time.perf_counter()
 
 # this needs to be double the real width for adding the walls It also should be an odd number. That makes the maze look better. 
-maze_width, maze_height = 101, 101
+if args:
+	maze_width = int(args[0])
+	maze_height = int(args[1])
+	width = int(args[2])
+	height = int(args[3])
+	visited_color = (int(args[4]), int(args[4]), int(args[4]))
+	wall_color = (int(args[5]), int(args[5]), int(args[5]))
+else:
+	maze_width, maze_height = 101, 101
+	width, height = 602, 602
+	visited_color = (255, 255, 255)
+	wall_color = (0, 0, 0)
 
-
-width, height = 602, 602
 cell_width, cell_height = round(width / maze_width), round(height / maze_height)
-win = pygame.display.set_mode((width, height))
 
 
 class Wall:
@@ -21,9 +32,9 @@ class Wall:
 			self.permanent = True
 		else:
 			self.permanent = False
-		self.color = (0, 0, 0)
+		self.color = wall_color
 
-	def show(self):
+	def show(self, win):
 		pygame.draw.rect(win, self.color, pygame.Rect(self.x * cell_width, self.y * cell_height, cell_width, cell_height))
 
 
@@ -36,7 +47,7 @@ class Cell:
 		self.walls = []
 		self.visited = False
 
-	def show(self):
+	def show(self, win):
 		pygame.draw.rect(win, self.color, pygame.Rect(self.x * cell_width, self.y * cell_height, cell_width, cell_height))
 
 	def check_neighbors(self, grid):
@@ -70,7 +81,7 @@ class Cell:
 
 def backtrack(stack, current):
 	while current.check_neighbors(grid) == False:
-		stack[-1].color = (0, 255, 0)
+		stack[-1].color = visited_color
 		stack.pop()
 		current = stack[-1]
 		current.color = (255, 0, 0)
@@ -86,15 +97,15 @@ current = grid[0]
 current.color = (255, 0, 0)
 stack = []
 done = False
+saved = False
+updated = False
 while run:
 	while not done:
 		# modify current cell to value of visited cell
-		current.color = (0, 255, 0)
+		current.color = visited_color
 		current.visited = True
 		# make a copy of current cell positions for finding of direction ater
 		old_pos = [current.x, current.y]
-		# clear board to be later updated
-		win.fill((0, 0, 0))
 		# get new cell
 		neighbors = current.check_neighbors(grid)
 		if neighbors:
@@ -109,11 +120,11 @@ while run:
 			# horizontal
 			if x_change != 0:
 				grid_copy[int(grid.index(current) - x_change / 2)] = Cell(int(current.x - x_change / 2), int(current.y))
-				grid_copy[int(grid.index(current) - x_change / 2)].color = (0, 255, 0)
+				grid_copy[int(grid.index(current) - x_change / 2)].color = visited_color
 			# vertical
 			elif y_change != 0:
 				grid_copy[int(grid.index(current) - maze_width * (y_change /2))] = Cell(current.x, current.y - y_change / 2)
-				grid_copy[int(grid.index(current) - maze_width * (y_change /2))].color = (0, 255, 0)
+				grid_copy[int(grid.index(current) - maze_width * (y_change /2))].color = visited_color
 		else:
 			if len(stack) > 2:
 				try:
@@ -135,11 +146,29 @@ while run:
 			finish = time.perf_counter()
 			done = True
 	# show walls and cells in the maze
-	for space in grid:
-		space.show()
+	win = pygame.display.set_mode((maze_width * cell_width, maze_height * cell_height))
+	
+	if not updated:
+		for space in grid:
+			space.show(win)
+		pygame.display.update()
+		updated = True
 
-	pygame.display.update()
+	keys = pygame.key.get_pressed()
+	if not saved:
+		if keys[pygame.K_TAB]:
+			saved = True
+			if len(args) >= 6:
+				filename = args[6]
+			else:
+				filename = f'maze {maze_width}x{maze_height}.txt'
+			with open(filename, 'w') as save_file:
+				save_file.write(str(grid))
+
+
 	# get pygame events for quitting 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
+
+	clock.tick(1)
