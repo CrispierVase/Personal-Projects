@@ -46,7 +46,6 @@ class Cell:
 		self.color = (255, 255, 255)
 		self.walls = []
 		self.visited = False
-		self.distance = 999999999999999999999999999999999
 		self.parent = None
 
 	def show(self, win):
@@ -57,12 +56,12 @@ class Cell:
 		self.neighbors = []
 
 		# up
-		if self.index > maze_width:
+		if self.index > maze_width + maze_width:
 			if type(grid[self.index - (distance * maze_width)]) == Cell and grid[self.index - (distance * maze_width)].visited == False:
 				self.neighbors.append(grid[self.index - (distance * maze_width)])
 
 		# down
-		if self.index < len(grid) - maze_width:
+		if self.index < len(grid) - distance * maze_width:
 			if type(grid[self.index + (distance * maze_width)]) == Cell and grid[self.index + (distance * maze_width)].visited == False:
 				self.neighbors.append(grid[self.index + (distance * maze_width)])
 
@@ -77,8 +76,7 @@ class Cell:
 
 		if len(self.neighbors) > 0:
 			return self.neighbors
-		else:
-			return False
+		return False
 
 
 def backtrack(stack, current):
@@ -89,24 +87,6 @@ def backtrack(stack, current):
 		current.color = (255, 0, 0)
 
 	return current, stack
-
-
-def my_sort(neighbors):
-	new = []
-	done = False
-	while not done:
-		lowest = None
-		for i in neighbors:
-			if lowest == None:
-				lowest = i
-			elif i.distance < lowest.distance:
-				lowest = i
-		if lowest == None:
-			done = True
-		else:
-			neighbors.remove(lowest)
-			new.insert(0, lowest)
-	return new[::-1]
 
 
 
@@ -154,7 +134,7 @@ while run:
 					current, stack = backtrack(stack, current)
 				except IndexError:
 					finish = time.perf_counter()
-					print(f'Maze Generation took {finish - start}')
+					(f'Maze Generation took {finish - start}')
 					done = True
 			else:
 				done = True
@@ -188,51 +168,52 @@ while run:
 				fake_end.show(win)
 				fake_end_neighbor = bottom_cell
 				break
-
-	if len(args) >= 6 and not saved:
-		filename = args[6]
-		pygame.image.save(win, filename)
-		with open(filename, 'w') as save_file:
-				save_file.write(str(grid))
+	if not saved:
 		saved = True
+		if len(args) >= 6:
+			filename = args[6]
+		else:
+			filename = f'maze {maze_width}x{maze_height}.txt'
+		with open(filename, 'w') as save_file:
+			save_file.write(str(grid))
+		pygame.image.save(win, filename)
+
 			
 	if not updated:
 		pygame.display.update()
 		updated = True
 
 	keys = pygame.key.get_pressed()
-	if not saved:
-		if keys[pygame.K_TAB]:
-			saved = True
-			if len(args) >= 6:
-				filename = args[6]
-			else:
-				filename = f'maze {maze_width}x{maze_height}.txt'
-			with open(filename, 'w') as save_file:
-				save_file.write(str(grid))
 
-	# This is the implimentation of flood fill but with my own spin on it. It can be updated in the future to use A* or something faster
-	# An implementation using nodes at different new corridors and Dijkstra's would be good this is graph theory and stuff I don't yet know
-	# check a_star.txt for my primative a*
+
 	if not solved:
-		# get copy of grid to solve 
-		solve_grid = grid.copy()
+		for spot in grid:
+			spot.visited = False
+		current = grid[0]
 		all_neighbors = []
-		current = solve_grid[0]
-		while not solved:
-			print('iteration')
-			new = current.check_neighbors(solve_grid, 1)
-			for spot in new:
-				spot.distance = current.distance + 1
-			all_neighbors.extend(new)
-			all_neighbors = my_sort(all_neighbors)
-			current = all_neighbors[0]
-			if fake_end_neighbor in all_neighbors:
-				solved = True
-		for spot in solve_grid:
-			print(spot.distance)
-
-		
+		all_neighbors.append(current)
+		stop = False
+		while not stop:
+			new_stuff = all_neighbors.copy()
+			for spot in all_neighbors:
+				new = spot.check_neighbors(grid, 1)
+				if new:
+					for place in new:
+						place.visited = True
+						place.parent = spot
+						new_stuff.append(place)
+				else:
+					new_stuff.remove(spot)
+			if new_stuff == all_neighbors:
+				stop = True
+			print(len(all_neighbors))
+		print('done?')
+		for spot in grid:
+			if type(spot) == Cell:
+				print(spot.parent)
+			else:
+				print('Wall')
+		solved = True
 
 
 	# get pygame events for quitting 

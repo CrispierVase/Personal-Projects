@@ -55,12 +55,12 @@ class Cell:
 		self.neighbors = []
 
 		# up
-		if self.index > maze_width:
+		if self.index + 2 > maze_width:
 			if type(grid[self.index - (2 * maze_width)]) == Cell and grid[self.index - (2 * maze_width)].visited == False:
 				self.neighbors.append(grid[self.index - (2 * maze_width)])
 
 		# down
-		if self.index < len(grid) - maze_width:
+		if self.index + 2 < len(grid) - maze_width:
 			if type(grid[self.index + (2 * maze_width)]) == Cell and grid[self.index + (2 * maze_width)].visited == False:
 				self.neighbors.append(grid[self.index + (2 * maze_width)])
 
