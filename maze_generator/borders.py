@@ -38,7 +38,6 @@ class Wall:
 		pygame.draw.rect(win, self.color, pygame.Rect((self.x * cell_width) + cell_width, (self.y * cell_height) + cell_height, cell_width, cell_height))
 
 
-
 class Cell:
 	def __init__(self, x, y):
 		self.x = x
@@ -88,6 +87,23 @@ def backtrack(stack, current):
 
 	return current, stack
 
+def fake_walls():
+	global fake_end_neighbor
+	pygame.draw.rect(win, wall_color, pygame.Rect(0, 0, cell_width, win.get_height()))
+	pygame.draw.rect(win, wall_color, pygame.Rect(0, 0, win.get_width(), cell_height))
+	pygame.draw.rect(win, wall_color, pygame.Rect(0, win.get_height() - cell_height, win.get_width(), cell_height))
+	pygame.draw.rect(win, wall_color, pygame.Rect(win.get_width() - cell_width, cell_height, cell_width, win.get_height() - cell_height))
+	fake = Cell(0, -1)
+	fake.color = visited_color
+	fake.show(win)
+	for bottom_cell in grid[-maze_width:-1][::-1]:
+		if type(bottom_cell) == Cell:
+			fake_end = Cell(bottom_cell.x, bottom_cell.y + 1)
+			fake_end.color = visited_color
+			fake_end.show(win)
+			fake_end_neighbor = bottom_cell
+			break
+	return fake_end
 
 
 run = True
@@ -154,20 +170,8 @@ while run:
 	if not updated:
 		for space in grid:
 			space.show(win)
-		pygame.draw.rect(win, wall_color, pygame.Rect(0, 0, cell_width, win.get_height()))
-		pygame.draw.rect(win, wall_color, pygame.Rect(0, 0, win.get_width(), cell_height))
-		pygame.draw.rect(win, wall_color, pygame.Rect(0, win.get_height() - cell_height, win.get_width(), cell_height))
-		pygame.draw.rect(win, wall_color, pygame.Rect(win.get_width() - cell_width, cell_height, cell_width, win.get_height() - cell_height))
-		fake = Cell(0, -1)
-		fake.color = visited_color
-		fake.show(win)
-		for bottom_cell in grid[-maze_width:-1][::-1]:
-			if type(bottom_cell) == Cell:
-				fake_end = Cell(bottom_cell.x, bottom_cell.y + 1)
-				fake_end.color = visited_color
-				fake_end.show(win)
-				fake_end_neighbor = bottom_cell
-				break
+		fake_walls()
+		updated = True
 	if not saved:
 		saved = True
 		if len(args) >= 6:
@@ -190,31 +194,38 @@ while run:
 		for spot in grid:
 			spot.visited = False
 		current = grid[0]
-		all_neighbors = []
-		all_neighbors.append(current)
+		all_neigbors = [current]
 		stop = False
 		while not stop:
-			new_stuff = all_neighbors.copy()
-			for spot in all_neighbors:
+			new_stuff = all_neigbors.copy()
+			for spot in new_stuff:
 				new = spot.check_neighbors(grid, 1)
 				if new:
 					for place in new:
-						place.visited = True
 						place.parent = spot
-						new_stuff.append(place)
+						place.visited = True
+					new_stuff.extend(new)
 				else:
 					new_stuff.remove(spot)
-			if new_stuff == all_neighbors:
+			if new_stuff == all_neigbors:
 				stop = True
-			print(len(all_neighbors))
-		print('done?')
-		for spot in grid:
-			if type(spot) == Cell:
-				print(spot.parent)
 			else:
-				print('Wall')
+				all_neigbors = new_stuff.copy()
+		path = []
+		current = fake_end_neighbor
+		while current.parent:
+			path.insert(0, current)
+			current = current.parent
+		path.insert(0, grid[0])
+		for spot in path:
+			spot.color = (0, 0, 151)
+		for spot in grid:
+			spot.show(win)
+		fake_end = fake_walls()
+		fake_end.color = (0, 0, 151)
+		fake_end.show(win)
+		pygame.display.update()
 		solved = True
-
 
 	# get pygame events for quitting 
 	for event in pygame.event.get():
