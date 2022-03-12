@@ -13,8 +13,12 @@ if args:
 	maze_height = int(args[1])
 	width = int(args[2])
 	height = int(args[3])
-	visited_color = (int(args[4]), int(args[4]), int(args[4]))
-	wall_color = (int(args[5]), int(args[5]), int(args[5]))
+	if args[4] != 'True':
+		visited_color = (int(args[4]), int(args[4]), int(args[4]))
+		wall_color = (int(args[5]), int(args[5]), int(args[5]))
+	else:
+		visited_color = (164,147,147)
+		wall_color = (103,89,94)
 else:
 	maze_width, maze_height = 101, 101
 	width, height = 602, 602
@@ -55,17 +59,17 @@ class Cell:
 		self.neighbors = []
 
 		# up
-		if self.index > maze_width + maze_width:
-			if type(grid[self.index - (distance * maze_width)]) == Cell and grid[self.index - (distance * maze_width)].visited == False:
+		if self.index > maze_width and self.index - (distance * maze_width) > 0:
+			if type(grid[self.index - (distance * maze_width)]) == Cell and not grid[self.index - (distance * maze_width)].visited:
 				self.neighbors.append(grid[self.index - (distance * maze_width)])
 
 		# down
 		if self.index < len(grid) - distance * maze_width:
-			if type(grid[self.index + (distance * maze_width)]) == Cell and grid[self.index + (distance * maze_width)].visited == False:
+			if type(grid[self.index + (distance * maze_width)]) == Cell and not grid[self.index + (distance * maze_width)].visited:
 				self.neighbors.append(grid[self.index + (distance * maze_width)])
 
 		# left
-		if (self.index % maze_width) - distance < maze_width:
+		if (self.index % maze_width) - distance >= 0:
 			if type(grid[self.index - distance]) == Cell and not grid[self.index - distance].visited:
 				self.neighbors.append(grid[self.index - distance])
 		# right
@@ -83,8 +87,6 @@ def backtrack(stack, current):
 		stack[-1].color = visited_color
 		stack.pop()
 		current = stack[-1]
-		current.color = (255, 0, 0)
-
 	return current, stack
 
 def fake_walls():
@@ -111,7 +113,6 @@ grid = [Wall(j, i) if (i % 2 == 1 or j % 2 == 1) else Cell(j, i) for i in range(
 clock = pygame.time.Clock()
 idx = 0
 current = grid[0]
-current.color = (255, 0, 0)
 stack = []
 done = False
 saved = False
@@ -150,7 +151,7 @@ while run:
 					current, stack = backtrack(stack, current)
 				except IndexError:
 					finish = time.perf_counter()
-					(f'Maze Generation took {finish - start}')
+					print(f'Maze Generation took {finish - start}')
 					done = True
 			else:
 				done = True
@@ -172,6 +173,8 @@ while run:
 			space.show(win)
 		fake_walls()
 		updated = True
+		pygame.display.update()
+
 	if not saved:
 		saved = True
 		if len(args) >= 6:
@@ -180,52 +183,55 @@ while run:
 			filename = f'maze {maze_width}x{maze_height}.txt'
 		with open(filename, 'w') as save_file:
 			save_file.write(str(grid))
-		pygame.image.save(win, filename)
-
-			
-	if not updated:
-		pygame.display.update()
-		updated = True
-
-	keys = pygame.key.get_pressed()
-
+		pygame.image.save(win, f'{filename}.png')
 
 	if not solved:
+		solve_start = time.perf_counter()
 		for spot in grid:
 			spot.visited = False
 		current = grid[0]
 		all_neigbors = [current]
+		current.visited = True
 		stop = False
 		while not stop:
 			new_stuff = all_neigbors.copy()
-			for spot in new_stuff:
+			for spot in all_neigbors:
 				new = spot.check_neighbors(grid, 1)
 				if new:
 					for place in new:
-						place.parent = spot
-						place.visited = True
+						if abs(place.x - spot.x) + abs(place.y - spot.y) > 1:
+							new.remove(place)
+						else:
+							place.visited = True
+							place.parent = spot
+							place.show(win)
 					new_stuff.extend(new)
 				else:
 					new_stuff.remove(spot)
-			if new_stuff == all_neigbors:
+			all_neigbors = new_stuff.copy()
+			if len(all_neigbors) == 0:
 				stop = True
-			else:
-				all_neigbors = new_stuff.copy()
+
 		path = []
 		current = fake_end_neighbor
-		while current.parent:
+		path_color = (232,180,184)
+		while current != grid[0]:
 			path.insert(0, current)
+			current.color = path_color
+			current.show(win)
 			current = current.parent
-		path.insert(0, grid[0])
-		for spot in path:
-			spot.color = (0, 0, 151)
-		for spot in grid:
-			spot.show(win)
+		current.color = path_color
+		current.show(win)
 		fake_end = fake_walls()
-		fake_end.color = (0, 0, 151)
+		fake_end.color = path_color
 		fake_end.show(win)
+		pygame.draw.rect(win, path_color, pygame.Rect(cell_width, 0, cell_width, cell_height))
 		pygame.display.update()
+
 		solved = True
+		solve_finish = time.perf_counter()
+		print(f'Solving took {solve_finish - solve_start}')
+		pygame.image.save(win, f'{filename}-SOLVED.png')
 
 	# get pygame events for quitting 
 	for event in pygame.event.get():
