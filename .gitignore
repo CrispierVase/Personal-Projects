@@ -1,2 +1,6 @@
 # Ignore Github Key
 ./github_key
+# Ignore images in maze generator
+./maze_generator/*.png
+./maze_generator/*.jpg
+
