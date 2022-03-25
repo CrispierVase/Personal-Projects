@@ -98,7 +98,7 @@ def fake_walls():
 	fake = Cell(0, -1)
 	fake.color = visited_color
 	fake.show(win)
-	for bottom_cell in grid[-maze_width:-1][::-1]:
+	for bottom_cell in grid[-maze_width:][::-1]:
 		if type(bottom_cell) == Cell:
 			fake_end = Cell(bottom_cell.x, bottom_cell.y + 1)
 			fake_end.color = visited_color
@@ -214,7 +214,10 @@ while run:
 
 		path = []
 		current = fake_end_neighbor
-		path_color = (232,180,184)
+		if len(args) > 7:
+			path_color = (232,180,184)
+		else:
+			path_color = (255, 0, 0)
 		while current != grid[0]:
 			path.insert(0, current)
 			current.color = path_color
