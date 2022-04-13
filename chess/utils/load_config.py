@@ -21,6 +21,8 @@ def load_config():
 		win_size = contents[2][1:-1].split(',')
 		for idx, val in enumerate(win_size):
 			win_size[idx] = int(val)
-		cell_size = contents[3]
+		cell_size = int(contents[3])
+		if cell_size * 8 > win_size[0]:
+			cell_size = int(win_size[0] / 8) + 1
 		return tuple(light_color), tuple(dark_color), tuple(win_size), int(cell_size)
 
