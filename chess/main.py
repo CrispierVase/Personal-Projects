@@ -26,6 +26,10 @@ class Cell:
 
 grid = [[Cell(i, j) for i in range(8)] for j in range(8)]
 run = True
+grid[4][4].piece = Pawn(4, 4, 1)
+tmp = grid[4][4].piece.find_options(grid)
+for place in tmp:
+    grid[place[0]][place[1]].color = (255, 0, 0)
 
 
 @win.event
