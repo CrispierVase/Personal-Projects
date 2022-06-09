@@ -24,12 +24,9 @@ class Piece:
             filename = f'B{self.name}.png'
         self.image = pyglet.image.load(filename)
 
-    def find_options(self, grid):
-        # This function will only be used for sliding pieces and Kings
+    def find_options(self, grid, get_check=False):
+        # This function works for all pieces except for pawns. 
         options = []
-        if not self.directions:
-            print('bad piece, no directions')
-            return []
         distance = self.directions[0][2]
         for direction in self.directions:
             dist = 1
@@ -38,12 +35,16 @@ class Piece:
                 check_y = self.y + (dist * direction[1])
                 if in_range(0, check_x, 7) and in_range(0, check_y, 7):
                     if not grid[check_x][check_y].piece:
-                        options.append([check_x, check_y])
+                        if not get_check:
+                            options.append([check_y, check_x])
                         dist += 1
                     else:
+                        if grid[check_x][check_y].piece.color != self.color:
+                            options.append([check_y, check_x])
                         dist = 10
                 else:
                     dist = 10
+
         return options
 
     def show(self):
@@ -60,3 +61,39 @@ class Bishop(Piece):
     def __init__(self, x, y, color):
         self.directions = [[-1, -1, 8], [1, -1, 8], [-1, 1, 8], [1, 1, 8]]
         super().__init__(x, y, color)
+
+class Queen(Piece):
+    def __init__(self, x, y, color):
+        self.directions = [[-1, 0, 8], [1, 0, 8], [0, -1, 8], [0, 1, 8], [-1, -1, 8], [1, -1, 8], [-1, 1, 8], [1, 1, 8]]
+        super().__init__(x, y, color)
+
+class Knight(Piece):
+    def __init__(self, x, y, color):
+        self.directions = [[-2, -1, 1], [-2, 1, 1], [-1, 2, 1], [1, 2, 1], [2, -1, 1], [2, 1, 1], [-1, -2, 1], [1, -2]]
+        super().__init__(x, y, color)
+
+class Pawn(Piece):
+    def __init__(self, x, y, color):
+        self.directions = [[0, 1, 1]]
+        super().__init__(x, y, color)
+
+    def find_options(self, grid):
+        # This function will not be here for a while. Pawns are bad lol
+        return 
+
+
+class King(Piece):
+    def __init__(self, x, y, color):
+        self.directions = [[-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1], [-1, 0, 1], [1, 0, 1], [0, -1, 1], [0, 1, 1]]
+        super().__init__(x, y, color)
+        self.fakes = []
+
+    def update_fakes(self):
+        self.fakes = [Queen(self.x, self.y, self.color), Knight(self.x, self.y, self.color)]
+
+    def find_check(self, grid):
+        options = []
+        self.update_fakes()
+        for fake in self.fakes:
+            options.extend(fake.find_options(grid))
+        return options

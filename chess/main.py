@@ -30,9 +30,8 @@ class Cell:
 
 board = [[Cell(i, j) for i in range(8)] for j in range(8)]
 
-test = Rook(4, 4, 0)
-board[4][4].piece = test
-tmp = test.find_options(board)
+board[4][4].piece = King(4, 4, 0)
+tmp = board[4][4].piece.find_check(board)
 for i in tmp:
     board[i[0]][i[1]].color = (255, 0, 0)
     board[i[0]][i[1]].make_shape()
