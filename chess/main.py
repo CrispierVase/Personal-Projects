@@ -31,14 +31,15 @@ class Cell:
 board = [[Cell(i, j) for i in range(8)] for j in range(8)]
 
 board[4][4].piece = King(4, 4, 0)
-tmp = board[4][4].piece.find_check(board)
-for i in tmp:
-    board[i[0]][i[1]].color = (255, 0, 0)
-    board[i[0]][i[1]].make_shape()
+tmp = board[4][4].piece
 
 @win.event
 def on_mouse_press(x, y, button, modifiers):
-    print(mouse_square(x, y))
+    goal = mouse_square(x, y)
+    options = tmp.find_options(board)
+    print(goal, options)
+    if goal in options:
+        tmp.move([x, y])
 
 
 @win.event

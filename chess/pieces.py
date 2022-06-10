@@ -8,10 +8,11 @@ light_color, dark_color, win_size, cell_size = load_config()
 
 
 class Piece:
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, moves=[0, None]):
         self.x = x
         self.y = y
-        self.moves = 0
+        # this is only an option so pawns can promote
+        self.moves = moves
         # self.directions is [[x change, y change, max distance]]
         if not self.directions:
             self.directions = []
@@ -40,7 +41,11 @@ class Piece:
                         dist += 1
                     else:
                         if grid[check_x][check_y].piece.color != self.color:
-                            options.append([check_y, check_x])
+                            if not get_check:
+                                options.append([check_y, check_x])
+                            elif type(grid[check_x][check_y].piece) == type(self):
+                                options.append([check_y, check_x])
+
                         dist = 10
                 else:
                     dist = 10
@@ -49,6 +54,15 @@ class Piece:
 
     def show(self):
         self.image.blit(self.x * cell_size + 13, self.y * cell_size + 10)
+
+    def move(self, new_location):
+        # pass good moves into this function. It will let you move the piece literally anywhere if you don't
+        grid[self.x][self.y].piece = None
+        self.x = new_location[0]
+        self.y = new_location[1]
+        grid[self.x][self.y].piece = self
+        self.show()
+        return
 
 
 class Rook(Piece):
@@ -76,9 +90,20 @@ class Pawn(Piece):
     def __init__(self, x, y, color):
         self.directions = [[0, 1, 1]]
         super().__init__(x, y, color)
+        self.attacks = [[-1, 1], [1, 1]]
+        if self.color == 0:
+            self.directions = [[0, -1, 1]]
+            self.attacks[0][2] = -1
+            self.attacks[1][2] = 1
 
     def find_options(self, grid):
-        # This function will not be here for a while. Pawns are bad lol
+        options = []
+        # checking if the piece can move forward
+        if in_range(1, self.y, 6):
+            self.y += self.directions[1]
+        # looking at attacks
+        if in_range(1, self.x, 7):
+
         return 
 
 
@@ -95,5 +120,7 @@ class King(Piece):
         options = []
         self.update_fakes()
         for fake in self.fakes:
-            options.extend(fake.find_options(grid))
-        return options
+            options.extend(fake.find_options(grid, get_check=True))
+        if options:
+            return True
+        return False
