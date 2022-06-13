@@ -30,16 +30,17 @@ class Cell:
 
 board = [[Cell(i, j) for i in range(8)] for j in range(8)]
 
-board[4][4].piece = King(4, 4, 0)
-tmp = board[4][4].piece
+board[0][0].piece = Pawn(0, 0, 0)
+board[1][1].piece = Bishop(1, 1, 1)
+tmp = board[0][0].piece
 
 @win.event
 def on_mouse_press(x, y, button, modifiers):
     goal = mouse_square(x, y)
     options = tmp.find_options(board)
-    print(goal, options)
+    print(options)
     if goal in options:
-        tmp.move([x, y])
+        tmp.move(board, goal)
 
 
 @win.event

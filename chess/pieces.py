@@ -37,14 +37,14 @@ class Piece:
                 if in_range(0, check_x, 7) and in_range(0, check_y, 7):
                     if not grid[check_x][check_y].piece:
                         if not get_check:
-                            options.append([check_y, check_x])
+                            options.append([check_x, check_y])
                         dist += 1
                     else:
                         if grid[check_x][check_y].piece.color != self.color:
                             if not get_check:
-                                options.append([check_y, check_x])
+                                options.append([check_x, check_y])
                             elif type(grid[check_x][check_y].piece) == type(self):
-                                options.append([check_y, check_x])
+                                options.append([check_x, check_y])
 
                         dist = 10
                 else:
@@ -55,7 +55,7 @@ class Piece:
     def show(self):
         self.image.blit(self.x * cell_size + 13, self.y * cell_size + 10)
 
-    def move(self, new_location):
+    def move(self, grid, new_location):
         # pass good moves into this function. It will let you move the piece literally anywhere if you don't
         grid[self.x][self.y].piece = None
         self.x = new_location[0]
@@ -91,20 +91,28 @@ class Pawn(Piece):
         self.directions = [[0, 1, 1]]
         super().__init__(x, y, color)
         self.attacks = [[-1, 1], [1, 1]]
-        if self.color == 0:
+        if self.color == 1:
             self.directions = [[0, -1, 1]]
-            self.attacks[0][2] = -1
-            self.attacks[1][2] = 1
+            self.attacks[0][1] = -1
+            self.attacks[1][1] = -1
 
     def find_options(self, grid):
         options = []
         # checking if the piece can move forward
-        if in_range(1, self.y, 6):
-            self.y += self.directions[1]
+        if in_range(0, self.y, 7):
+            options.append([self.x, self.y + self.directions[0][1]])
         # looking at attacks
-        if in_range(1, self.x, 7):
-
-        return 
+        # this means that the pawn can attack to the left from the perspective of white
+        if 1 <= self.x and  in_range(1, self.y + self.attacks[0][1], 7):
+            if grid[self.x - 1][self.y + self.attacks[0][1]].piece:
+                if grid[self.x - 1][self.y + self.attacks[0][1]].piece.color != self.color:
+                    options.append([self.x - 1, self.y + self.attacks[0][1]])
+        # this means that the pawn can attack to the left from the perspective of white
+        if self.x <= 6 and  in_range(1, self.y + self.attacks[1][1], 7):
+            if grid[self.x + 1][self.y + self.attacks[1][1]].piece:
+                if grid[self.x + 1][self.y + self.attacks[1][1]].piece.color != self.color:
+                    options.append([self.x + 1, self.y + self.attacks[1][1]])
+        return options
 
 
 class King(Piece):
@@ -114,7 +122,9 @@ class King(Piece):
         self.fakes = []
 
     def update_fakes(self):
-        self.fakes = [Queen(self.x, self.y, self.color), Knight(self.x, self.y, self.color)]
+        for piece in self.fakes:
+            del piece
+        self.fakes = [Queen(self.x, self.y, self.color), Knight(self.x, self.y, self.color), Pawn(self.x, self.y, self.color)]
 
     def find_check(self, grid):
         options = []
