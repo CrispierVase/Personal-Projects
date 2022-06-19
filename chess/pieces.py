@@ -3,7 +3,7 @@ import pyglet
 from utils.load_config import load_config
 from utils.in_range import in_range
 
-light_color, dark_color, win_size, cell_size = load_config()
+light_color, dark_color, win_size, cell_size, squares = load_config()
 
 
 
