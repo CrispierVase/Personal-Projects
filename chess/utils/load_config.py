@@ -25,5 +25,5 @@ def load_config():
         cell_size = int(contents[3])
         if cell_size * 8 > win_size[0]:
             cell_size = int(win_size[0] / 8) + 1
-        return tuple(light_color), tuple(dark_color), tuple(win_size), int(cell_size), pyglet.graphics.Batch()
+        return tuple(light_color), tuple(dark_color), tuple(win_size), int(cell_size)
 

@@ -3,12 +3,12 @@ import pyglet
 from utils.load_config import load_config
 from utils.in_range import in_range
 
-light_color, dark_color, win_size, cell_size, squares = load_config()
+light_color, dark_color, win_size, cell_size = load_config()
 
 
 
 class Piece:
-    def __init__(self, x, y, color, moves=[0, None]):
+    def __init__(self, x, y, color, moves=0):
         self.x = x
         self.y = y
         # this is only an option so pawns can promote
@@ -61,28 +61,29 @@ class Piece:
         self.x = new_location[0]
         self.y = new_location[1]
         grid[self.x][self.y].piece = self
+        self.moves += 1
         self.show()
         return
 
 
 class Rook(Piece):
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, moves=0):
         self.directions = [[-1, 0, 8], [1, 0, 8], [0, -1, 8], [0, 1, 8]]
         super().__init__(x, y, color)
 
 
 class Bishop(Piece):
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, moves=0):
         self.directions = [[-1, -1, 8], [1, -1, 8], [-1, 1, 8], [1, 1, 8]]
         super().__init__(x, y, color)
 
 class Queen(Piece):
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, moves=0):
         self.directions = [[-1, 0, 8], [1, 0, 8], [0, -1, 8], [0, 1, 8], [-1, -1, 8], [1, -1, 8], [-1, 1, 8], [1, 1, 8]]
         super().__init__(x, y, color)
 
 class Knight(Piece):
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, moves=0):
         self.directions = [[-2, -1, 1], [-2, 1, 1], [-1, 2, 1], [1, 2, 1], [2, -1, 1], [2, 1, 1], [-1, -2, 1], [1, -2]]
         super().__init__(x, y, color)
 
@@ -112,6 +113,10 @@ class Pawn(Piece):
             if grid[self.x + 1][self.y + self.attacks[1][1]].piece:
                 if grid[self.x + 1][self.y + self.attacks[1][1]].piece.color != self.color:
                     options.append([self.x + 1, self.y + self.attacks[1][1]])
+        # check if a double move is possible
+        if self.moves:
+            pass
+
         return options
 
 
@@ -131,6 +136,16 @@ class King(Piece):
         self.update_fakes()
         for fake in self.fakes:
             options.extend(fake.find_options(grid, get_check=True))
-        if options:
-            return True
-        return False
+        return len(options) >= 1
+
+class Passent:
+    def __init__(self, x, y, color, placed_on, parent):
+        self.x = x
+        self.y = y 
+        self.color = color
+        self.placed_on = placed_on
+        self.parent = parent
+
+    def update(self, turn):
+        if turn != self.placed_on:
+            del self
